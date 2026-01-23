@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "自定义新标签页",
+  "version": "1.0.0",
+  "description": "带有背景轮播和搜索功能的自定义新标签页。Changelog：v1.0.0：使用双图层+透明过渡实现淡入淡出,解决了图片切换时闪烁的问题;实现第一页随机播放;完全显示但可能留空白。",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  }
+}

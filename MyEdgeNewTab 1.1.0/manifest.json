@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "自定义新标签页",
+    "version": "1.1.0",
+    "description": "带有背景轮播和搜索功能的自定义新标签页。v1.1.0：优化渐变效果，补充兜底机制以防读取错误而无图显示；补充浅灰色底色；实现脚本获取图片名，不再需要把图片名写入核心文件里",
+    "chrome_url_overrides": {
+        "newtab": "index.html"
+    },
+
+    // 声明可访问的资源
+    "web_accessible_resources": [
+        {
+            "resources": [ "image-list.json", "images/*" ],
+            "matches": [ "chrome://newtab/*" ]
+        }
+    ]
+}

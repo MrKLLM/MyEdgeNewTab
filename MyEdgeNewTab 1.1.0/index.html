@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>新标签页</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 背景轮播容器：改为包裹两个图层的父容器 -->
+    <div class="background-carousel">
+        <!-- 背景图层1：初始显示（添加 active 类） -->
+        <div class="background-layer active"></div>
+        <!-- 背景图层2：初始隐藏（无 active 类） -->
+        <div class="background-layer"></div>
+    </div>
+
+    <!-- 搜索框容器（无修改） -->
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder=" " autocomplete="off">
+        <button id="search-button">搜索</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

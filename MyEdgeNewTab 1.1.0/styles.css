@@ -1,0 +1,92 @@
+/* ===================== 全局基础样式 ===================== */
+/* 重置body/html默认边距，设置全屏高度和统一字体（仿Edge） */
+body, html {
+    margin: 0; /* 清除默认外边距 */
+    padding: 0; /* 清除默认内边距 */
+    height: 100%; /* 让根元素占满视口高度 */
+    font-family: 'Segoe UI', sans-serif; /* 使用与Edge浏览器相似的字体，提升兼容性 */
+}
+
+/* ===================== 背景轮播核心样式 ===================== */
+/* 背景轮播容器：作为所有背景图层的父容器，负责全屏定位和兜底样式 */
+.background-carousel {
+    position: fixed; /* 固定定位：背景不随页面滚动移动 */
+    top: 0; /* 顶部对齐视口 */
+    left: 0; /* 左侧对齐视口 */
+    width: 100vw; /* 宽度占满视口（vw比100%更精准） */
+    height: 100vh; /* 高度占满视口 */
+    z-index: -1; /* 层级设为-1：确保背景在所有内容下方 */
+    background-color: #f5f5f5; /* 兜底色：填充contain模式下图片未覆盖的空白区域 */
+}
+
+/* 单个背景图层：定义每张轮播图的基础样式（保留contain模式） */
+.background-layer {
+    position: absolute; /* 绝对定位：图层叠加在父容器内 */
+    top: 0; /* 顶部对齐父容器 */
+    left: 0; /* 左侧对齐父容器 */
+    width: 100%; /* 宽度占满父容器 */
+    height: 100%; /* 高度占满父容器 */
+    background-size: contain; /* 核心：图片完整显示（不裁剪），优先保证图片完整性 */
+    background-position: center; /* 图片居中显示：最大化展示核心内容 */
+    background-repeat: no-repeat; /* 禁止图片重复：避免小图拼接 */
+    opacity: 0; /* 初始状态隐藏：所有图层默认不显示 */
+    transition: opacity 1s ease-in-out; /* 过渡动画：1秒淡入淡出，切换更顺滑 */
+    will-change: opacity; /* 性能优化：告知浏览器opacity会频繁变化，提前渲染优化 */
+}
+
+    /* 激活状态的图层：当前显示的背景图 */
+    .background-layer.active {
+        opacity: 1; /* 完全显示：激活的图层透明度为1 */
+        z-index: 1; /* 层级提升：确保激活图层在最上层 */
+    }
+
+    /* 非激活状态的图层：未显示的背景图（语义化标注） */
+    .background-layer:not(.active) {
+        opacity: 0; /* 完全隐藏：未激活的图层透明度为0 */
+    }
+
+/* ===================== 搜索框样式 ===================== */
+/* 搜索框容器：居中定位，层级高于背景 */
+.search-container {
+    position: fixed; /* 固定定位：搜索框不随滚动移动 */
+    top: 25%; /* 距离顶部25%（视觉居中） */
+    left: 50%; /* 水平居中第一步：左移50% */
+    transform: translate(-50%, -50%); /* 水平居中第二步：左移自身50% */
+    z-index: 2; /* 层级高于背景：确保搜索框不被遮挡 */
+    text-align: center; /* 内部元素居中 */
+}
+
+/* 搜索输入框：仿Edge样式，圆角+阴影 */
+#search-input {
+    width: 550px; /* 输入框宽度 */
+    height: 23px; /* 输入框高度 */
+    padding: 0 16px; /* 左右内边距：文字不贴边 */
+    border: 1px solid #dfe1e5; /* 浅灰色边框：仿Edge */
+    border-radius: 24px; /* 圆角：柔和视觉效果 */
+    font-size: 16px; /* 字体大小：保证可读性 */
+    outline: none; /* 清除聚焦时的默认轮廓线 */
+    box-shadow: 0 1px 6px rgba(32, 33, 37, 0.28); /* 轻微阴影：提升立体感 */
+}
+
+    /* 搜索框hover/聚焦状态：增强阴影，弱化边框 */
+    #search-input:hover, #search-input:focus {
+        box-shadow: 0 2px 8px rgba(32, 33, 37, 0.3); /* 阴影加深：反馈交互 */
+        border-color: rgba(223, 225, 229, 0); /* 边框透明：更简洁 */
+    }
+
+/* 搜索按钮：蓝色主题，hover变色 */
+#search-button {
+    margin-top: 23px; /* 与输入框的间距 */
+    padding: 1px 10px; /* 内边距：控制按钮大小 */
+    background-color: #4285f4; /* 主色：谷歌蓝，辨识度高 */
+    color: white; /* 文字白色：对比明显 */
+    border: none; /* 清除默认边框 */
+    border-radius: 4px; /* 轻微圆角：统一风格 */
+    cursor: pointer; /* 鼠标悬停显示手型：提示可点击 */
+    font-size: 14px; /* 字体大小：适配输入框 */
+}
+
+    /* 按钮hover状态：加深蓝色，反馈交互 */
+    #search-button:hover {
+        background-color: #3367d6; /* 深色版谷歌蓝：hover反馈 */
+    }
