@@ -6,7 +6,9 @@
     "chrome_url_overrides": {
         "newtab": "index.html"
     },
-
+    "icons": {
+        "128": "icon/logo-T.png"
+    },
     // 声明可访问的资源
     "web_accessible_resources": [
         {
