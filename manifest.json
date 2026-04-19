@@ -1,15 +1,14 @@
 {
     "manifest_version": 3,
     "name": "自定义新标签页",
-    "version": "1.1.1",
-    "description": "带有背景轮播和搜索功能的自定义新标签页。v1.1.1：新增文件名差异化处理，同时兼容带真实空格和真实 %20 字符的图片加载。",
+    "version": "1.2.0",
+    "description": "带有背景轮播和搜索功能的自定义新标签页。v1.2.0：新增设置面板（导入图片到扩展、外观与轮播配置持久化），并优化轮播的资源占用。",
     "chrome_url_overrides": {
         "newtab": "index.html"
     },
     "icons": {
         "128": "icon/logo-T.png"
     },
-    // 声明可访问的资源
     "web_accessible_resources": [
         {
             "resources": [ "image-list.json", "images/*" ],
