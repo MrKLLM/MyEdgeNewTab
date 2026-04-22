@@ -12,7 +12,7 @@
     "web_accessible_resources": [
         {
             "resources": [ "image-list.json", "images/*" ],
-            "matches": [ "chrome://newtab/*" ]
+            "matches": [ "<all_urls>" ]
         }
     ]
 }

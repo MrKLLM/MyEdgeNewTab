@@ -33,31 +33,60 @@
 
             <div class="settings-section">
                 <div class="settings-section-title">背景图片</div>
-                <label class="settings-row">
+                
+                <div class="settings-row settings-row-full">
                     <span class="settings-label">图片来源</span>
-                    <select id="setting-image-source">
-                        <option value="imported">导入图片（推荐）</option>
-                        <option value="packaged">内置 images 文件夹</option>
-                    </select>
-                </label>
-                <label class="settings-row">
-                    <span class="settings-label">导入图片</span>
-                    <input id="import-input" type="file" multiple accept="image/*">
-                </label>
-                <div class="settings-row settings-row-compact">
-                    <span class="settings-label">已导入</span>
-                    <span id="imported-count" class="settings-value">0</span>
-                    <button id="clear-imported" type="button" class="settings-danger">清空</button>
                 </div>
-                <div id="imported-list" class="imported-list"></div>
+                
+                <div class="settings-source-selector">
+                    <label class="source-option">
+                        <input type="radio" name="image-source" value="imported" id="setting-image-source-imported">
+                        <span class="source-label">📁 导入我的图片</span>
+                    </label>
+                    <label class="source-option">
+                        <input type="radio" name="image-source" value="packaged" id="setting-image-source-packaged">
+                        <span class="source-label">📦 内置图片库</span>
+                    </label>
+                </div>
+
+                <div class="settings-row settings-row-full" id="packaged-tip" hidden>
+                    <div class="tip-box">
+                        <div class="tip-title">💡 图片清单为空？</div>
+                        <div class="tip-text">请双击运行脚本生成：</div>
+                        <div class="tip-path">generate-image-list.bat</div>
+                        <div class="tip-text" style="font-size: 11px; margin-top: 6px;">位置：扩展根目录</div>
+                    </div>
+                </div>
+
+                <div id="imported-section">
+                    <div class="settings-row settings-row-full">
+                        <button id="file-import-btn" type="button" class="file-import-btn">+ 选择本地图片</button>
+                        <input id="import-input" type="file" multiple accept="image/*" hidden>
+                    </div>
+                    <div class="settings-row settings-row-compact">
+                        <span class="settings-label">已导入</span>
+                        <span id="imported-count" class="settings-value">0</span>
+                        <button id="clear-imported" type="button" class="settings-danger">清空</button>
+                    </div>
+                </div>
+
+                <div class="settings-row settings-row-full">
+                    <span class="settings-label">图片预览</span>
+                </div>
+                <div id="preview-grid" class="preview-grid"></div>
             </div>
 
             <div class="settings-section">
                 <div class="settings-section-title">搜索框外观</div>
                 <label class="settings-row">
                     <span class="settings-label">位置（距顶部 %）</span>
-                    <input id="setting-search-top" type="range" min="5" max="60" step="1">
+                    <input id="setting-search-top" type="range" min="0" max="100" step="1">
                     <span id="setting-search-top-value" class="settings-value"></span>
+                </label>
+                <label class="settings-row">
+                    <span class="settings-label">搜索框与按钮间距（px）</span>
+                    <input id="setting-button-margin-top" type="range" min="0" max="200" step="5">
+                    <span id="setting-button-margin-top-value" class="settings-value"></span>
                 </label>
                 <label class="settings-row">
                     <span class="settings-label">宽度（px）</span>
@@ -70,14 +99,43 @@
                     <span id="setting-search-height-value" class="settings-value"></span>
                 </label>
                 <label class="settings-row">
-                    <span class="settings-label">圆角（px）</span>
+                    <span class="settings-label">输入框圆角（px）</span>
                     <input id="setting-search-radius" type="range" min="0" max="40" step="1">
                     <span id="setting-search-radius-value" class="settings-value"></span>
                 </label>
                 <label class="settings-row">
-                    <span class="settings-label">按钮间距（px）</span>
-                    <input id="setting-button-margin-top" type="range" min="0" max="60" step="1">
-                    <span id="setting-button-margin-top-value" class="settings-value"></span>
+                    <span class="settings-label">输入框透明度（%）</span>
+                    <input id="setting-search-opacity" type="range" min="50" max="100" step="5">
+                    <span id="setting-search-opacity-value" class="settings-value"></span>
+                </label>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">搜索按钮外观</div>
+                <label class="settings-row">
+                    <span class="settings-label">按钮颜色</span>
+                    <input id="setting-btn-color" type="color" style="width:100%;height:28px;border:none;padding:0;cursor:pointer;border-radius:4px;">
+                    <span class="settings-value"></span>
+                </label>
+                <label class="settings-row">
+                    <span class="settings-label">字号（px）</span>
+                    <input id="setting-btn-font-size" type="range" min="10" max="24" step="1">
+                    <span id="setting-btn-font-size-value" class="settings-value"></span>
+                </label>
+                <label class="settings-row">
+                    <span class="settings-label">圆角（px）</span>
+                    <input id="setting-btn-radius" type="range" min="0" max="30" step="1">
+                    <span id="setting-btn-radius-value" class="settings-value"></span>
+                </label>
+                <label class="settings-row">
+                    <span class="settings-label">上下内边距（px）</span>
+                    <input id="setting-btn-padding-v" type="range" min="0" max="30" step="1">
+                    <span id="setting-btn-padding-v-value" class="settings-value"></span>
+                </label>
+                <label class="settings-row">
+                    <span class="settings-label">左右内边距（px）</span>
+                    <input id="setting-btn-padding-h" type="range" min="4" max="60" step="1">
+                    <span id="setting-btn-padding-h-value" class="settings-value"></span>
                 </label>
             </div>
 
@@ -105,6 +163,11 @@
                     <span class="settings-label">页面隐藏时暂停</span>
                     <input id="setting-pause-when-hidden" type="checkbox">
                 </label>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">其他操作</div>
+                <button id="reset-settings-btn" type="button" class="reset-btn">🔄 恢复默认配置</button>
             </div>
         </div>
     </div>
