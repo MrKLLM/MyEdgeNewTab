@@ -1,18 +1,18 @@
 {
-    "manifest_version": 3,
-    "name": "自定义新标签页",
-    "version": "1.2.0",
-    "description": "带有背景轮播和搜索功能的自定义新标签页。v1.2.0：新增设置面板（导入图片到扩展、外观与轮播配置持久化），并优化轮播的资源占用。",
-    "chrome_url_overrides": {
-        "newtab": "index.html"
-    },
-    "icons": {
-        "128": "icon/logo-T.png"
-    },
-    "web_accessible_resources": [
-        {
-            "resources": [ "image-list.json", "images/*" ],
-            "matches": [ "<all_urls>" ]
-        }
-    ]
+  "manifest_version": 3,
+  "name": "自定义新标签页",
+  "version": "1.2.0",
+  "description": "带有背景轮播和搜索功能的自定义新标签页。v1.2.0：新增设置面板（导入图片到扩展、外观与轮播配置持久化），并优化轮播的资源占用。",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "icons": {
+    "128": "icon/logo-T.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["image-list.json", "images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

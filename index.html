@@ -2,172 +2,153 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>新标签页</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- 背景轮播容器：改为包裹两个图层的父容器 -->
     <div class="background-carousel">
-        <!-- 背景图层1：初始显示（添加 active 类） -->
-        <div class="background-layer active"></div>
-        <!-- 背景图层2：初始隐藏（无 active 类） -->
+        <div class="background-layer"></div>
         <div class="background-layer"></div>
     </div>
 
-    <!-- 搜索框容器（无修改） -->
     <div class="search-container">
-        <input type="text" id="search-input" placeholder=" " autocomplete="off">
+        <input type="text" id="search-input" placeholder="搜索...">
         <button id="search-button">搜索</button>
     </div>
 
-    <!-- 设置入口 -->
-    <button id="settings-button" type="button" aria-label="设置" title="设置">⚙</button>
+    <button id="settings-button">⚙</button>
 
-    <!-- 设置面板（遮罩 + 抽屉） -->
     <div id="settings-overlay" class="settings-overlay" hidden>
-        <div id="settings-drawer" class="settings-drawer" role="dialog" aria-modal="true" aria-label="设置面板">
+        <div id="settings-drawer" class="settings-drawer">
             <div class="settings-header">
-                <div class="settings-title">设置</div>
-                <button id="settings-close" type="button" class="settings-close" aria-label="关闭">✕</button>
+                <span class="settings-title">设置</span>
+                <button id="settings-close" class="settings-close">✕</button>
             </div>
-
             <div class="settings-section">
                 <div class="settings-section-title">背景图片</div>
-                
-                <div class="settings-row settings-row-full">
-                    <span class="settings-label">图片来源</span>
-                </div>
-                
-                <div class="settings-source-selector">
+                <div class="settings-row-full settings-source-selector">
                     <label class="source-option">
-                        <input type="radio" name="image-source" value="imported" id="setting-image-source-imported">
-                        <span class="source-label">📁 导入我的图片</span>
+                        <input type="radio" name="image-source" id="setting-image-source-imported" value="imported" checked>
+                        <span class="source-label">导入我的图片</span>
                     </label>
                     <label class="source-option">
-                        <input type="radio" name="image-source" value="packaged" id="setting-image-source-packaged">
-                        <span class="source-label">📦 内置图片库</span>
+                        <input type="radio" name="image-source" id="setting-image-source-packaged" value="packaged">
+                        <span class="source-label">内置图片库</span>
                     </label>
                 </div>
-
-                <div class="settings-row settings-row-full" id="packaged-tip" hidden>
-                    <div class="tip-box">
-                        <div class="tip-title">💡 图片清单为空？</div>
-                        <div class="tip-text">请双击运行脚本生成：</div>
-                        <div class="tip-path">generate-image-list.bat</div>
-                        <div class="tip-text" style="font-size: 11px; margin-top: 6px;">位置：扩展根目录</div>
-                    </div>
+                <div id="packaged-tip" class="tip-box" hidden>
+                    <div class="tip-title">💡 图片清单为空？</div>
+                    <div class="tip-text">请双击运行脚本生成：</div>
+                    <div class="tip-path">generate-image-list.bat</div>
+                    <div class="tip-text">位置：扩展根目录 + 选择本地图片</div>
                 </div>
-
                 <div id="imported-section">
-                    <div class="settings-row settings-row-full">
-                        <button id="file-import-btn" type="button" class="file-import-btn">+ 选择本地图片</button>
-                        <input id="import-input" type="file" multiple accept="image/*" hidden>
+                    <div class="settings-row">
+                        <span class="settings-label">已导入 <span id="imported-count">0</span></span>
+                        <button id="clear-imported" class="settings-danger">清空</button>
+                        <button id="file-import-btn" class="file-import-btn">+ 选择本地图片</button>
+                        <input type="file" id="import-input" accept="image/*" multiple hidden>
                     </div>
-                    <div class="settings-row settings-row-compact">
-                        <span class="settings-label">已导入</span>
-                        <span id="imported-count" class="settings-value">0</span>
-                        <button id="clear-imported" type="button" class="settings-danger">清空</button>
-                    </div>
+                    <div id="preview-grid" class="preview-grid"></div>
                 </div>
-
-                <div class="settings-row settings-row-full">
-                    <span class="settings-label">图片预览</span>
-                </div>
-                <div id="preview-grid" class="preview-grid"></div>
             </div>
 
             <div class="settings-section">
                 <div class="settings-section-title">搜索框外观</div>
-                <label class="settings-row">
+                <div class="settings-row">
                     <span class="settings-label">位置（距顶部 %）</span>
-                    <input id="setting-search-top" type="range" min="0" max="100" step="1">
-                    <span id="setting-search-top-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
-                    <span class="settings-label">搜索框与按钮间距（px）</span>
-                    <input id="setting-button-margin-top" type="range" min="0" max="200" step="5">
-                    <span id="setting-button-margin-top-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-search-top" min="0" max="100" value="25">
+                    <span id="setting-search-top-value" class="settings-value">25%</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">宽度（px）</span>
-                    <input id="setting-search-width" type="range" min="280" max="900" step="10">
-                    <span id="setting-search-width-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-search-width" min="280" max="900" value="550">
+                    <span id="setting-search-width-value" class="settings-value">550px</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">高度（px）</span>
-                    <input id="setting-search-height" type="range" min="18" max="60" step="1">
-                    <span id="setting-search-height-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-search-height" min="18" max="60" value="23">
+                    <span id="setting-search-height-value" class="settings-value">23px</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">输入框圆角（px）</span>
-                    <input id="setting-search-radius" type="range" min="0" max="40" step="1">
-                    <span id="setting-search-radius-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-search-radius" min="0" max="40" value="24">
+                    <span id="setting-search-radius-value" class="settings-value">24px</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">输入框透明度（%）</span>
-                    <input id="setting-search-opacity" type="range" min="50" max="100" step="5">
-                    <span id="setting-search-opacity-value" class="settings-value"></span>
-                </label>
+                    <input type="range" id="setting-search-opacity" min="50" max="100" value="90">
+                    <span id="setting-search-opacity-value" class="settings-value">90%</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">搜索框与按钮间距（px）</span>
+                    <input type="range" id="setting-button-margin-top" min="0" max="200" value="23">
+                    <span id="setting-button-margin-top-value" class="settings-value">23px</span>
+                </div>
             </div>
 
             <div class="settings-section">
                 <div class="settings-section-title">搜索按钮外观</div>
-                <label class="settings-row">
+                <div class="settings-row">
                     <span class="settings-label">按钮颜色</span>
-                    <input id="setting-btn-color" type="color" style="width:100%;height:28px;border:none;padding:0;cursor:pointer;border-radius:4px;">
-                    <span class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="color" id="setting-btn-color" value="#4285f4">
+                    <span class="settings-value">#4285f4</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">字号（px）</span>
-                    <input id="setting-btn-font-size" type="range" min="10" max="24" step="1">
-                    <span id="setting-btn-font-size-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-btn-font-size" min="10" max="24" value="14">
+                    <span id="setting-btn-font-size-value" class="settings-value">14px</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">圆角（px）</span>
-                    <input id="setting-btn-radius" type="range" min="0" max="30" step="1">
-                    <span id="setting-btn-radius-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-btn-radius" min="0" max="30" value="4">
+                    <span id="setting-btn-radius-value" class="settings-value">4px</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">上下内边距（px）</span>
-                    <input id="setting-btn-padding-v" type="range" min="0" max="30" step="1">
-                    <span id="setting-btn-padding-v-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-btn-padding-v" min="0" max="30" value="4">
+                    <span id="setting-btn-padding-v-value" class="settings-value">4px</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">左右内边距（px）</span>
-                    <input id="setting-btn-padding-h" type="range" min="4" max="60" step="1">
-                    <span id="setting-btn-padding-h-value" class="settings-value"></span>
-                </label>
+                    <input type="range" id="setting-btn-padding-h" min="4" max="60" value="14">
+                    <span id="setting-btn-padding-h-value" class="settings-value">14px</span>
+                </div>
             </div>
 
             <div class="settings-section">
                 <div class="settings-section-title">轮播</div>
-                <label class="settings-row">
+                <div class="settings-row">
                     <span class="settings-label">间隔（秒）</span>
-                    <input id="setting-carousel-interval" type="range" min="2" max="30" step="1">
-                    <span id="setting-carousel-interval-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-carousel-interval" min="2" max="30" value="4">
+                    <span id="setting-carousel-interval-value" class="settings-value">4s</span>
+                </div>
+                <div class="settings-row settings-row-compact">
                     <span class="settings-label">随机顺序</span>
-                    <input id="setting-carousel-shuffle" type="checkbox">
-                </label>
-                <label class="settings-row">
+                    <input type="checkbox" id="setting-carousel-shuffle">
+                    <span class="settings-value">关</span>
+                </div>
+                <div class="settings-row">
                     <span class="settings-label">动画时长（ms）</span>
-                    <input id="setting-carousel-transition" type="range" min="200" max="3000" step="100">
-                    <span id="setting-carousel-transition-value" class="settings-value"></span>
-                </label>
-                <label class="settings-row">
+                    <input type="range" id="setting-carousel-transition" min="200" max="3000" value="1000">
+                    <span id="setting-carousel-transition-value" class="settings-value">1000ms</span>
+                </div>
+                <div class="settings-row settings-row-compact">
                     <span class="settings-label">暂停轮播</span>
-                    <input id="setting-carousel-paused" type="checkbox">
-                </label>
-                <label class="settings-row">
+                    <input type="checkbox" id="setting-carousel-paused">
+                    <span class="settings-value">关</span>
+                </div>
+                <div class="settings-row settings-row-compact">
                     <span class="settings-label">页面隐藏时暂停</span>
-                    <input id="setting-pause-when-hidden" type="checkbox">
-                </label>
+                    <input type="checkbox" id="setting-pause-when-hidden" checked>
+                    <span class="settings-value">开</span>
+                </div>
             </div>
 
             <div class="settings-section">
                 <div class="settings-section-title">其他操作</div>
-                <button id="reset-settings-btn" type="button" class="reset-btn">🔄 恢复默认配置</button>
+                <button id="reset-settings-btn" class="reset-btn">🔄 恢复默认配置</button>
             </div>
         </div>
     </div>
