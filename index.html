@@ -55,94 +55,109 @@
             </div>
 
             <div class="settings-section">
-                <div class="settings-section-title">搜索框外观</div>
-                <div class="settings-row">
-                    <span class="settings-label">位置（距顶部 %）</span>
-                    <input type="range" id="setting-search-top" min="0" max="100" value="25">
-                    <span id="setting-search-top-value" class="settings-value">25%</span>
+                <div class="settings-section-header">
+                    <button class="section-toggle" id="toggle-search-appearance" data-section="search-appearance">▶</button>
+                    <div class="settings-section-title">搜索框外观</div>
                 </div>
-                <div class="settings-row">
-                    <span class="settings-label">宽度（px）</span>
-                    <input type="range" id="setting-search-width" min="280" max="900" value="550">
-                    <span id="setting-search-width-value" class="settings-value">550px</span>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-label">高度（px）</span>
-                    <input type="range" id="setting-search-height" min="18" max="60" value="23">
-                    <span id="setting-search-height-value" class="settings-value">23px</span>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-label">输入框圆角（px）</span>
-                    <input type="range" id="setting-search-radius" min="0" max="40" value="24">
-                    <span id="setting-search-radius-value" class="settings-value">24px</span>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-label">输入框透明度（%）</span>
-                    <input type="range" id="setting-search-opacity" min="50" max="100" value="90">
-                    <span id="setting-search-opacity-value" class="settings-value">90%</span>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-label">搜索框与按钮间距（px）</span>
-                    <input type="range" id="setting-button-margin-top" min="0" max="200" value="23">
-                    <span id="setting-button-margin-top-value" class="settings-value">23px</span>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <div class="settings-section-title">搜索按钮外观</div>
-                <div class="settings-row">
-                    <span class="settings-label">按钮颜色</span>
-                    <input type="color" id="setting-btn-color" value="#4285f4">
-                    <span class="settings-value">#4285f4</span>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-label">字号（px）</span>
-                    <input type="range" id="setting-btn-font-size" min="10" max="24" value="14">
-                    <span id="setting-btn-font-size-value" class="settings-value">14px</span>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-label">圆角（px）</span>
-                    <input type="range" id="setting-btn-radius" min="0" max="30" value="4">
-                    <span id="setting-btn-radius-value" class="settings-value">4px</span>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-label">上下内边距（px）</span>
-                    <input type="range" id="setting-btn-padding-v" min="0" max="30" value="4">
-                    <span id="setting-btn-padding-v-value" class="settings-value">4px</span>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-label">左右内边距（px）</span>
-                    <input type="range" id="setting-btn-padding-h" min="4" max="60" value="14">
-                    <span id="setting-btn-padding-h-value" class="settings-value">14px</span>
+                <div id="search-appearance" class="section-content" hidden>
+                    <div class="settings-row">
+                        <span class="settings-label">位置（距顶部 %）</span>
+                        <input type="range" id="setting-search-top" min="0" max="100" value="25">
+                        <span id="setting-search-top-value" class="settings-value">25%</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">宽度（px）</span>
+                        <input type="range" id="setting-search-width" min="280" max="900" value="550">
+                        <span id="setting-search-width-value" class="settings-value">550px</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">高度（px）</span>
+                        <input type="range" id="setting-search-height" min="18" max="60" value="23">
+                        <span id="setting-search-height-value" class="settings-value">23px</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">输入框圆角（px）</span>
+                        <input type="range" id="setting-search-radius" min="0" max="40" value="24">
+                        <span id="setting-search-radius-value" class="settings-value">24px</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">输入框透明度（%）</span>
+                        <input type="range" id="setting-search-opacity" min="0" max="100" value="90">
+                        <span id="setting-search-opacity-value" class="settings-value">90%</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">搜索框与按钮间距（px）</span>
+                        <input type="range" id="setting-button-margin-top" min="0" max="200" value="23">
+                        <span id="setting-button-margin-top-value" class="settings-value">23px</span>
+                    </div>
                 </div>
             </div>
 
             <div class="settings-section">
-                <div class="settings-section-title">轮播</div>
-                <div class="settings-row">
-                    <span class="settings-label">间隔（秒）</span>
-                    <input type="range" id="setting-carousel-interval" min="2" max="30" value="4">
-                    <span id="setting-carousel-interval-value" class="settings-value">4s</span>
+                <div class="settings-section-header">
+                    <button class="section-toggle" id="toggle-btn-appearance" data-section="btn-appearance">▶</button>
+                    <div class="settings-section-title">搜索按钮外观</div>
                 </div>
-                <div class="settings-row settings-row-compact">
-                    <span class="settings-label">随机顺序</span>
-                    <input type="checkbox" id="setting-carousel-shuffle">
-                    <span class="settings-value">关</span>
+                <div id="btn-appearance" class="section-content" hidden>
+                    <div class="settings-row">
+                        <span class="settings-label">按钮颜色</span>
+                        <input type="color" id="setting-btn-color" value="#4285f4">
+                        <span class="settings-value">#4285f4</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">字号（px）</span>
+                        <input type="range" id="setting-btn-font-size" min="10" max="24" value="14">
+                        <span id="setting-btn-font-size-value" class="settings-value">14px</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">圆角（px）</span>
+                        <input type="range" id="setting-btn-radius" min="0" max="30" value="4">
+                        <span id="setting-btn-radius-value" class="settings-value">4px</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">上下内边距（px）</span>
+                        <input type="range" id="setting-btn-padding-v" min="0" max="30" value="4">
+                        <span id="setting-btn-padding-v-value" class="settings-value">4px</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">左右内边距（px）</span>
+                        <input type="range" id="setting-btn-padding-h" min="4" max="60" value="14">
+                        <span id="setting-btn-padding-h-value" class="settings-value">14px</span>
+                    </div>
                 </div>
-                <div class="settings-row">
-                    <span class="settings-label">动画时长（ms）</span>
-                    <input type="range" id="setting-carousel-transition" min="200" max="3000" value="1000">
-                    <span id="setting-carousel-transition-value" class="settings-value">1000ms</span>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-header">
+                    <button class="section-toggle" id="toggle-carousel" data-section="carousel">▶</button>
+                    <div class="settings-section-title">轮播</div>
                 </div>
-                <div class="settings-row settings-row-compact">
-                    <span class="settings-label">暂停轮播</span>
-                    <input type="checkbox" id="setting-carousel-paused">
-                    <span class="settings-value">关</span>
-                </div>
-                <div class="settings-row settings-row-compact">
-                    <span class="settings-label">页面隐藏时暂停</span>
-                    <input type="checkbox" id="setting-pause-when-hidden" checked>
-                    <span class="settings-value">开</span>
+                <div id="carousel" class="section-content" hidden>
+                    <div class="settings-row">
+                        <span class="settings-label">间隔（秒）</span>
+                        <input type="range" id="setting-carousel-interval" min="2" max="30" value="4">
+                        <span id="setting-carousel-interval-value" class="settings-value">4s</span>
+                    </div>
+                    <div class="settings-row settings-row-compact">
+                        <span class="settings-label">随机顺序</span>
+                        <input type="checkbox" id="setting-carousel-shuffle">
+                        <span class="settings-value">关</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">动画时长（ms）</span>
+                        <input type="range" id="setting-carousel-transition" min="200" max="3000" value="1000">
+                        <span id="setting-carousel-transition-value" class="settings-value">1000ms</span>
+                    </div>
+                    <div class="settings-row settings-row-compact">
+                        <span class="settings-label">暂停轮播</span>
+                        <input type="checkbox" id="setting-carousel-paused">
+                        <span class="settings-value">关</span>
+                    </div>
+                    <div class="settings-row settings-row-compact">
+                        <span class="settings-label">页面隐藏时暂停</span>
+                        <input type="checkbox" id="setting-pause-when-hidden" checked>
+                        <span class="settings-value">开</span>
+                    </div>
                 </div>
             </div>
 

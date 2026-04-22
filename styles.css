@@ -408,3 +408,75 @@ body, html {
 .reset-btn:active {
   background: rgba(66, 133, 244, 0.25);
 }
+
+/* ===================== 可折叠sections样式 ===================== */
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 0;
+  margin-bottom: 10px;
+}
+
+.section-toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: #3c4043;
+  padding: 4px 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  width: 20px;
+  height: 20px;
+}
+
+.section-toggle:hover {
+  background: rgba(32, 33, 37, 0.08);
+}
+
+.section-toggle.expanded {
+  transform: rotate(90deg);
+}
+
+.section-content {
+  max-height: 2000px;
+  overflow: hidden;
+  animation: expandSection 0.3s ease-out forwards;
+  animation-fill-mode: both;
+}
+
+.section-content[hidden] {
+  display: none !important;
+  max-height: 0;
+  overflow: hidden;
+  animation: collapseSection 0.3s ease-in forwards;
+  animation-fill-mode: both;
+}
+
+@keyframes expandSection {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 2000px;
+    opacity: 1;
+  }
+}
+
+@keyframes collapseSection {
+  from {
+    max-height: 2000px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}

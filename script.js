@@ -77,7 +77,7 @@ function normalizeSettings(settings) {
   s.searchWidthPx = clampNumber(Number(s.searchWidthPx), 280, 900);
   s.searchHeightPx = clampNumber(Number(s.searchHeightPx), 18, 60);
   s.searchRadiusPx = clampNumber(Number(s.searchRadiusPx), 0, 40);
-  s.searchOpacityPercent = clampNumber(Number(s.searchOpacityPercent), 50, 100);
+  s.searchOpacityPercent = clampNumber(Number(s.searchOpacityPercent), 0, 100);
   s.buttonMarginTopPx = clampNumber(Number(s.buttonMarginTopPx), 0, 200);
   s.btnFontSize = clampNumber(Number(s.btnFontSize), 10, 24);
   s.btnRadiusPx = clampNumber(Number(s.btnRadiusPx), 0, 30);
@@ -343,6 +343,21 @@ function setupSettingsUi(controllers) {
   closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', e => { if (!overlay.hidden && e.key === 'Escape') close(); });
+
+  // 设置可折叠sections的事件监听
+  const toggleButtons = document.querySelectorAll('.section-toggle');
+  toggleButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const sectionId = button.getAttribute('data-section');
+      const contentEl = document.getElementById(sectionId);
+      if (contentEl) {
+        const isHidden = contentEl.hidden;
+        contentEl.hidden = !isHidden;
+        button.classList.toggle('expanded', !isHidden);
+      }
+    });
+  });
 
   const el = id => document.getElementById(id);
   const sourceImported = el('setting-image-source-imported');
