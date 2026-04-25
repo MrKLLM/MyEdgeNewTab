@@ -5,6 +5,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   searchHeightPx: 23,
   searchRadiusPx: 24,
   searchOpacityPercent: 90,
+  searchTextColorHex: '#202124',   // 新增：搜索框文字颜色
   buttonMarginTopPx: 23,
   btnFontSize: 14,
   btnRadiusPx: 4,
@@ -78,6 +79,9 @@ function normalizeSettings(settings) {
   s.searchHeightPx = clampNumber(Number(s.searchHeightPx), 18, 60);
   s.searchRadiusPx = clampNumber(Number(s.searchRadiusPx), 0, 40);
   s.searchOpacityPercent = clampNumber(Number(s.searchOpacityPercent), 0, 100);
+  // 新增：文字颜色合法性校验
+  s.searchTextColorHex = typeof s.searchTextColorHex === 'string' && /^#[0-9a-fA-F]{6}$/.test(s.searchTextColorHex)
+    ? s.searchTextColorHex : DEFAULT_SETTINGS.searchTextColorHex;
   s.buttonMarginTopPx = clampNumber(Number(s.buttonMarginTopPx), 0, 200);
   s.btnFontSize = clampNumber(Number(s.btnFontSize), 10, 24);
   s.btnRadiusPx = clampNumber(Number(s.btnRadiusPx), 0, 30);
@@ -99,8 +103,8 @@ function applyCssVars(settings) {
   root.style.setProperty('--search-width', `${settings.searchWidthPx}px`);
   root.style.setProperty('--search-height', `${settings.searchHeightPx}px`);
   root.style.setProperty('--search-radius', `${settings.searchRadiusPx}px`);
-  // ✅ 修复：转为 0~1 的小数，配合 CSS 直接使用 var(--search-opacity)
   root.style.setProperty('--search-opacity', settings.searchOpacityPercent / 100);
+  root.style.setProperty('--search-text-color', settings.searchTextColorHex); // 新增文字颜色变量
   root.style.setProperty('--button-margin-top', `${settings.buttonMarginTopPx}px`);
   root.style.setProperty('--carousel-transition-ms', `${settings.carouselTransitionMs}ms`);
   root.style.setProperty('--btn-font-size', `${settings.btnFontSize}px`);
@@ -506,6 +510,22 @@ function setupSettingsUi(controllers) {
     btnColorPicker.addEventListener('change', async () => await save({ btnColorHex: btnColorPicker.value }));
   }
 
+  // 新增：搜索框文字颜色控制
+  const searchTextColorPicker = el('setting-search-text-color');
+  const searchTextColorValue = el('setting-search-text-color-value');
+  if (searchTextColorPicker && searchTextColorValue) {
+    searchTextColorPicker.addEventListener('input', () => {
+      const color = searchTextColorPicker.value;
+      searchTextColorValue.textContent = color;
+      applyCssVars(normalizeSettings({ ...currentSettings, searchTextColorHex: color }));
+    });
+    searchTextColorPicker.addEventListener('change', async () => {
+      const color = searchTextColorPicker.value;
+      searchTextColorValue.textContent = color;
+      await save({ searchTextColorHex: color });
+    });
+  }
+
   checkShuffle.addEventListener('change', async () => { await save({ carouselShuffle: checkShuffle.checked }); await controllers.refreshImages(); });
   checkPaused.addEventListener('change', async () => await save({ carouselPaused: checkPaused.checked }));
   checkPauseWhenHidden.addEventListener('change', async () => await save({ pauseWhenHidden: checkPauseWhenHidden.checked }));
@@ -527,6 +547,11 @@ function setupSettingsUi(controllers) {
     importedSection.hidden = settings.imageSource !== 'imported';
     for (const [rangeId, valueId, key, fmt] of rangeIds) setRangeValue(el(rangeId), el(valueId), settings[key], fmt);
     if (btnColorPicker) btnColorPicker.value = settings.btnColorHex;
+    // 同步文字颜色取值
+    if (searchTextColorPicker) {
+      searchTextColorPicker.value = settings.searchTextColorHex;
+      if (searchTextColorValue) searchTextColorValue.textContent = settings.searchTextColorHex;
+    }
     checkShuffle.checked = settings.carouselShuffle;
     checkPaused.checked = settings.carouselPaused;
     checkPauseWhenHidden.checked = settings.pauseWhenHidden;

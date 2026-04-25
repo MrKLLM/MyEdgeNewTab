@@ -5,6 +5,7 @@
   --search-height: 23px;
   --search-radius: 24px;
   --search-opacity: 0.9; /* 默认改为 0~1 的小数 */
+  --search-text-color: #202124; /* 新增：搜索框文字颜色 */
   --button-margin-top: 23px;
   --carousel-transition-ms: 1000ms;
   --btn-font-size: 14px;
@@ -71,10 +72,15 @@ body, html {
   /* ✅ 修复：直接使用 0~1 的小数变量，移除错误的 calc 计算 */
   background-color: rgba(255, 255, 255, var(--search-opacity));
   box-shadow: 0 1px 6px rgba(32, 33, 37, 0.28);
+  /* 新增：应用文字颜色变量 */
+  color: var(--search-text-color, #202124);
 }
 #search-input:hover, #search-input:focus {
   box-shadow: 0 2px 8px rgba(32, 33, 37, 0.3);
   border-color: rgba(223, 225, 229, 0);
+}
+#search-input::placeholder {
+  color: rgba(0, 0, 0, 0.45); /* 占位符颜色略淡，不干扰主体文字颜色设置 */
 }
 #search-button {
   margin-top: var(--button-margin-top);
