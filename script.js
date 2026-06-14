@@ -356,9 +356,9 @@ function setupSettingsUi(controllers) {
       const sectionId = button.getAttribute('data-section');
       const contentEl = document.getElementById(sectionId);
       if (contentEl) {
-        const isHidden = contentEl.hidden;
-        contentEl.hidden = !isHidden;
-        button.classList.toggle('expanded', !isHidden);
+        const willExpand = contentEl.hidden;
+        contentEl.hidden = !willExpand;
+        button.classList.toggle('expanded', willExpand);
       }
     });
   });
@@ -491,6 +491,13 @@ function setupSettingsUi(controllers) {
   for (const [rangeId, valueId, key, fmt] of rangeIds) {
     const rangeEl = el(rangeId);
     const valueEl = el(valueId);
+    const syncProgress = () => {
+      const min = Number(rangeEl.min) || 0;
+      const max = Number(rangeEl.max) || 100;
+      const val = Number(rangeEl.value);
+      const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+      rangeEl.style.setProperty('--range-progress', `${pct}%`);
+    };
     const handler = async () => {
       const num = Number(rangeEl.value);
       valueEl.textContent = fmt(num);
@@ -499,9 +506,11 @@ function setupSettingsUi(controllers) {
     rangeEl.addEventListener('input', () => {
       const num = Number(rangeEl.value);
       valueEl.textContent = fmt(num);
+      syncProgress();
       applyCssVars(normalizeSettings({ ...currentSettings, [key]: num }));
     });
     rangeEl.addEventListener('change', handler);
+    syncProgress();
   }
 
   const btnColorPicker = el('setting-btn-color');
@@ -545,7 +554,16 @@ function setupSettingsUi(controllers) {
     sourcePackaged.checked = settings.imageSource === 'packaged';
     packagedTip.hidden = settings.imageSource !== 'packaged';
     importedSection.hidden = settings.imageSource !== 'imported';
-    for (const [rangeId, valueId, key, fmt] of rangeIds) setRangeValue(el(rangeId), el(valueId), settings[key], fmt);
+    for (const [rangeId, valueId, key, fmt] of rangeIds) {
+      const rangeEl = el(rangeId);
+      const valueEl = el(valueId);
+      setRangeValue(rangeEl, valueEl, settings[key], fmt);
+      // 同步进度条 --range-progress（reset 时 JS 改 value 不触发 input 事件，需手动刷新）
+      const min = Number(rangeEl.min) || 0;
+      const max = Number(rangeEl.max) || 100;
+      const pct = max > min ? ((Number(rangeEl.value) - min) / (max - min)) * 100 : 0;
+      rangeEl.style.setProperty('--range-progress', `${pct}%`);
+    }
     if (btnColorPicker) btnColorPicker.value = settings.btnColorHex;
     // 同步文字颜色取值
     if (searchTextColorPicker) {

@@ -6,7 +6,9 @@ A customizable Microsoft Edge new tab page with background carousel & Bing searc
 
 ## KEY DIFFERENCES BETWEEN VERSIONS
 
-- **v1.2.2 (Current)**: Added a search box text color picker in the Search Box Appearance settings section.
+- **v1.2.3 (Current)**: Major polish of the settings panel — unified design tokens, refreshed visual hierarchy, spring-feel animations on buttons & sliders, and bug fixes for the section chevron rotation and the "Restore Defaults" slider sync.
+
+- **v1.2.2 (Legacy)**: Added a search box text color picker in the Search Box Appearance settings section.
 
 - **v1.2.1 (Legacy)**: Minor bug fixes and stability improvements over v1.2.0.
 
@@ -30,7 +32,9 @@ A customizable Microsoft Edge new tab page with background carousel & Bing searc
 
 - **Carousel Customization:** Set interval, transition duration, shuffle order, pause carousel, and pause when page is hidden.
 
-- **Reset to Defaults:** One-click button to restore all settings to their default values.
+- **Reset to Defaults:** One-click button to restore all settings to their default values (v1.2.3 fixes a small slider-sync edge case).
+
+- **Settings panel experience polish (v1.2.3):** Unified design system tokens, refined palette, spring-feel animations on buttons and sliders, and perfectly synced section chevron rotation.
 
 - **Auto Image List Generation:** Batch file scans the `images/` folder and generates `image-list.json` (supports Chinese/spaced filenames) for the built-in library source.
 
@@ -153,8 +157,27 @@ Edit `styles.css` to override CSS variables:
 | Imported images lost after reinstalling extension | This is expected — IndexedDB is tied to the extension install; re-import your images            |
 | Built-in library empty in settings panel          | Run `generate-image-list.bat` first, then reload the extension                                  |
 | Search text color not applying                    | Ensure you are on v1.2.2 or later; try clicking "Restore Default Configuration" and reconfiguring |
+| Sliders stuck at old position after Reset          | Please upgrade to v1.2.3 or later                                                       |
 
 ## CHANGELOG
+
+### V1.2.3
+
+- **Settings panel visual & layout overhaul**: `styles.css` introduces a full design-system token set (spacing, radius, font sizes, text colors, primary/danger tri-state palette, shadows, easings, durations) to unify the look across all controls.
+- **Buttons interaction upgrade** (6 core buttons):
+  - Close ✕: hover rotates 90° + scales up; active uses a spring curve down to 0.88
+  - Primary blue buttons (Import, Reset): hover lifts 3px with a blue glow shadow; active uses spring press-down
+  - Danger button (Clear): hover lifts with a red glow shadow; active uses spring press-down
+  - Section toggle ▶: hover scales to 1.18; active spring-shrinks to 0.85
+  - Color picker: hover lifts and scales; active spring press-down
+- **Slider track & thumb rewritten** (with both webkit and Firefox prefixes):
+  - Track 6px → spring-grows to 8px on hover
+  - Thumb 16px circle: hover scales to 1.25 with a stronger shadow; active shows a blue halo ring and a grab/grabbing cursor
+  - Gradient fills the already-traversed portion via the new `--range-progress` CSS variable
+- **New spring curve tokens**: `--ease-spring` (release), `--ease-bounce` (press-down)
+- **Fixed section toggle "rotates every other time" bug**: a flipped boolean in `classList.toggle('expanded', !isHidden)` made the chevron rotate on collapse but not on expand
+- **Fixed "Restore Defaults" slider sync bug**: assigning `input.value` from JS does not fire the `input` event, so `--range-progress` used to stay on the old percentage — `syncUi` now resyncs the progress variable for every range
+- **Accessibility**: `prefers-reduced-motion: reduce` now also disables all new spring animations and transforms
 
 ### V1.2.2
 
