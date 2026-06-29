@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "自定义新标签页",
-  "version": "1.2.3",
-  "description": "带有背景轮播和搜索功能的自定义新标签页。v1.2.3：设置面板视觉与交互全面优化；修复折叠图标与恢复默认配置 bug。",
+  "version": "1.2.4",
+  "description": "带有背景轮播和搜索功能的自定义新标签页。v1.2.4：设置面板深海蓝暗色主题全面改版——蕾姆女仆配色、光晕交互、渐变标题。",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },

@@ -6,7 +6,9 @@ A customizable Microsoft Edge new tab page with background carousel & Bing searc
 
 ## KEY DIFFERENCES BETWEEN VERSIONS
 
-- **v1.2.3 (Current)**: Major polish of the settings panel — unified design tokens, refreshed visual hierarchy, spring-feel animations on buttons & sliders, and bug fixes for the section chevron rotation and the "Restore Defaults" slider sync.
+- **v1.2.4 (Current)**: Full dark-theme overhaul of the settings panel — Rem maid deep-sea blue palette, sky-blue glow interactions, gradient title & accent bar, redesigned sliders/buttons/scrollbar, refined typography with SF Pro Display, and darker glassmorphism drawer.
+
+- **v1.2.3 (Legacy)**: Major polish of the settings panel — unified design tokens, refreshed visual hierarchy, spring-feel animations on buttons & sliders, and bug fixes for the section chevron rotation and the "Restore Defaults" slider sync.
 
 - **v1.2.2 (Legacy)**: Added a search box text color picker in the Search Box Appearance settings section.
 
@@ -160,6 +162,20 @@ Edit `styles.css` to override CSS variables:
 | Sliders stuck at old position after Reset          | Please upgrade to v1.2.3 or later                                                       |
 
 ## CHANGELOG
+
+### V1.2.4
+
+- **Dark theme overhaul ("Rem maid deep-sea blue")**: The settings panel has been completely redesigned with a dark navy gradient background, replacing the previous white/light theme.
+- **Color palette rewrite**: Primary color shifted from Google blue (#4285f4) to sky blue (#8fc9ff); danger color from red (#d93025) to pink (#f9a8c4); text colors now use light blue rgba tones for dark-background readability.
+- **Settings button restyled**: Larger (42px), dark glass background with blue glow border, hover rotates 32° with scale + glow shadow, active spring press-down.
+- **Drawer glassmorphism upgrade**: Deep navy gradient (`rgba(6,22,50 → 4,14,36 → 5,18,44)`), stronger blur (44px), blue-tinted left border, deeper box-shadow.
+- **Header accent bar**: New 2px gradient top line (blue → sky → pink) + gradient-filled uppercase title text (`-webkit-background-clip: text`).
+- **Slider redesign**: Blue-gradient progress fill, glowing track shadow, gradient thumb with blue halo ring on active, refined Firefox `range-progress` styling.
+- **Button glow effects**: All interactive buttons (Import, Reset, Clear, Close, Color Picker) now feature blue/pink glow shadows on hover with spring press-down transitions.
+- **Typography refresh**: Added SF Pro Display to font stack, reduced base font sizes, section titles now uppercase with 2.2px letter-spacing and glowing accent bar.
+- **Scrollbar restyled**: Thinner (4px) with blue-gradient thumb matching the dark theme.
+- **Hover micro-interactions**: Rows, imported items, and source options now show subtle blue-tinted hover backgrounds.
+- **Reduced overlay opacity**: Settings backdrop darkened from 35% to 15% so the tab content stays visible.
 
 ### V1.2.3
 
