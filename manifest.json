@@ -1,18 +1,12 @@
 {
   "manifest_version": 3,
   "name": "自定义新标签页",
-  "version": "1.2.4",
-  "description": "带有背景轮播和搜索功能的自定义新标签页。v1.2.4：设置面板深海蓝暗色主题全面改版——蕾姆女仆配色、光晕交互、渐变标题。",
+  "version": "1.3.0",
+  "description": "带有背景轮播和搜索功能的自定义新标签页。v1.3.0：本地文件夹图源、图片浮窗预览、多选删除、性能优化。",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
   "icons": {
     "128": "icon/logo-T.png"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["image-list.json", "images/*"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }

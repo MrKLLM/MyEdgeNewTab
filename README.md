@@ -6,7 +6,7 @@ A customizable Microsoft Edge new tab page with background carousel & Bing searc
 
 ## KEY DIFFERENCES BETWEEN VERSIONS
 
-- **v1.2.4 (Current)**: Full dark-theme overhaul of the settings panel — Rem maid deep-sea blue palette, sky-blue glow interactions, gradient title & accent bar, redesigned sliders/buttons/scrollbar, refined typography with SF Pro Display, and darker glassmorphism drawer.
+- **v1.3.0 (Current)**: Added a third "Local Folder" image source that reads images directly without importing; imported-image thumbnails are now collapsed in settings and shown in a centered floating preview window; multi-select delete for imported images; paged/performance-optimized preview loading; removed the built-in image library feature.
 
 - **v1.2.3 (Legacy)**: Major polish of the settings panel — unified design tokens, refreshed visual hierarchy, spring-feel animations on buttons & sliders, and bug fixes for the section chevron rotation and the "Restore Defaults" slider sync.
 
@@ -24,7 +24,19 @@ A customizable Microsoft Edge new tab page with background carousel & Bing searc
 
 - **Local Image Import:** Select and import images directly from your device via the settings panel. Images are stored in IndexedDB inside the extension — no need to manage files manually.
 
-- **Dual Image Source:** Switch between "My Imported Images" and the "Built-in Image Library" (packaged `images/` folder) at any time from the settings panel.
+- **Local Folder Source:** Pick a local folder directly and carousel through its images without importing/copying them into IndexedDB — no need to run the image-list generation script.
+
+
+- **Multi-select Image Management:** Imported image previews include checkboxes, so you can select multiple images and delete them together, or select all at once.
+
+- **Floating Preview Window:** Imported image thumbnails are collapsed in the settings by default; click “View Imported Images” to open a centered floating window for browsing and managing them.
+
+
+- **Performance with Many Images:** The preview window loads thumbnails in batches (40 per page) to avoid rendering all images at once and causing lag.
+
+
+
+- **Dual Image Source:** Switch between "My Imported Images" and "Local Folder" (direct folder reading) at any time from the settings panel.
 
 - **Settings Panel:** A slide-out drawer with persistent configuration across sessions, including collapsible sections for Search Box Appearance, Search Button Appearance, and Carousel settings.
 
@@ -38,8 +50,6 @@ A customizable Microsoft Edge new tab page with background carousel & Bing searc
 
 - **Settings panel experience polish (v1.2.3):** Unified design system tokens, refined palette, spring-feel animations on buttons and sliders, and perfectly synced section chevron rotation.
 
-- **Auto Image List Generation:** Batch file scans the `images/` folder and generates `image-list.json` (supports Chinese/spaced filenames) for the built-in library source.
-
 - **Enhanced Filename Compatibility:** Supports filenames with spaces and encoded `%20` characters.
 
 - **Smooth Background Carousel:** Preloads images to eliminate white screen during switching (configurable fade transition).
@@ -47,18 +57,13 @@ A customizable Microsoft Edge new tab page with background carousel & Bing searc
 - **Bing Search Integration:** Full-featured search box (Enter key / button support).
 
 - **Error Handling:** Clear alerts for missing images/JSON files, fallback styles for broken image loads.
+- **Simplified Carousel Switches:** Checkbox options no longer show redundant "On/Off" labels.
 
 ## SUPPORTED ENVIRONMENTS
 
 - Microsoft Edge (Chromium-based) - [Download](https://www.microsoft.com/edge)
 
-- Windows OS (batch file only works on Windows)
-
-- Node.js (required for batch file to run `generate-image-list.js`) - [Download](https://nodejs.org/)
-
 - Git (for cloning/updating local repository) - [Download](https://git-scm.com/downloads)
-
-> **Note:** Node.js and Git are only needed if you plan to use the automatic image list generation feature or clone the repository via Git. For most users, the settings panel's import feature is sufficient.
 
 ## INSTALLATION
 
@@ -87,22 +92,32 @@ Then load the folder to Edge via `edge://extensions/` (Developer mode enabled).
 
 3. Click **+ Select Local Images** to pick one or more image files from your device
 
+   - You can also click **📁 Select Local Folder** to pick a folder and import all images inside it at once.
+
+
 4. Images are saved inside the extension (IndexedDB) and will persist across sessions
 
 5. To remove individual images, hover over a thumbnail in the preview grid and click **×**; to remove all, click **Clear**
+   - You can also tick multiple image checkboxes and click **Delete Selected** to remove them in batch, or use **Select All**.
+6. To view all imported images in a floating window, click **🖼 View Imported Images** — the thumbnails stay out of the settings drawer to keep it compact.
 
-### USE THE BUILT-IN IMAGE LIBRARY
 
-1. Place your images (PNG/JPG/JPEG/WEBP only) into the `images/` subfolder
 
-2. Ensure Node.js is installed (run `node --version` to check)
+### USE A LOCAL FOLDER AS SOURCE (NO IMPORT)
 
-3. Double-click `generate-image-list.bat` (Windows only) to generate `image-list.json`
+1. Open the settings panel → Under **Background Images**, select **Local Folder**
 
-4. Open the settings panel → Select "Built-in Image Library" under Background Images
+2. Click **📁 Select Local Folder** and choose a folder containing images
+
+3. The extension will read images from that folder directly for the carousel, without copying them into IndexedDB
+
+4. You can click **🖼 View Folder Images** to preview the folder contents in the floating window
+
+
 
 ### USE THE CUSTOM NEW TAB
 
+- Imported images can be viewed in the floating window by clicking **🖼 View Imported Images** in the settings panel.
 - New Edge tabs will carousel through your images automatically
 
 - Use the search box: Type a query → Press Enter or click the Search button to run Bing search
@@ -139,9 +154,10 @@ Edit `styles.css` to override CSS variables:
 
 - **Imported images** are stored in IndexedDB — they persist within the browser profile and do not require re-importing after reloading the extension, unless the extension is removed or browser data is cleared.
 
-- **Built-in library:** When adding/removing/replacing images in the `images/` folder, re-run `generate-image-list.bat` to update `image-list.json`.
+- **Local folder source:** The “Local Folder” mode reads the folder directly and does not copy images. The “Select Local Folder and Import” button under “My Imported Images” still copies images into IndexedDB if you prefer that workflow.
 
-- **Image Formats:** Only PNG/JPG/JPEG/WEBP are supported.
+
+- **Image Formats:** Import supports common image formats.
 
 - **First Load:** Images are cached on first load — subsequent carousel switches are instant.
 
@@ -151,17 +167,22 @@ Edit `styles.css` to override CSS variables:
 
 | Issue                                             | Solution                                                                                        |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| "Scan images failed" alert                        | Re-run `generate-image-list.bat` to generate `image-list.json`                                  |
-| "No images in images folder" alert                | Add valid images to `images/` → Re-run the batch file                                           |
-| Batch file does nothing when double-clicked       | Check if Node.js is installed; run `node --version` in Command Prompt to confirm                |
 | White screen during carousel                      | Check for broken image paths/filenames; ensure images are valid (preload is enabled by default) |
 | Search box not working                            | Verify `script.js` is intact (do not modify search-input/search-button IDs) → Refresh the tab   |
 | Imported images lost after reinstalling extension | This is expected — IndexedDB is tied to the extension install; re-import your images            |
-| Built-in library empty in settings panel          | Run `generate-image-list.bat` first, then reload the extension                                  |
 | Search text color not applying                    | Ensure you are on v1.2.2 or later; try clicking "Restore Default Configuration" and reconfiguring |
 | Sliders stuck at old position after Reset          | Please upgrade to v1.2.3 or later                                                       |
 
 ## CHANGELOG
+
+### V1.3.0
+
+- **Local Folder source (new)**: Added a third image-source mode. Pick a local folder and the extension will read images directly for the carousel — no importing/copying into IndexedDB and no need to run the image-list generation script.
+- **Floating preview window**: Imported images are no longer rendered directly in the settings drawer (which avoided pushing other options far down). A new **🖼 View Imported Images** button opens a centered floating window to browse and manage all imported images.
+- **Multi-select delete**: Imported image thumbnails have checkboxes; you can tick multiple images and click **Delete Selected**, or use **Select All**.
+- **Performance optimization**: The preview window loads thumbnails in batches (40 per page) with a "Load More" button, and releases object URLs when closing to reduce memory usage when you have many images.
+- **Simplified carousel toggles**: Removed the "On/Off" text next to carousel checkboxes.
+- **Removed built-in image library**: The built-in `images/` library source and related generation script dependency have been removed from the UI.
 
 ### V1.2.4
 

@@ -33,15 +33,10 @@
                         <span class="source-label">导入我的图片</span>
                     </label>
                     <label class="source-option">
-                        <input type="radio" name="image-source" id="setting-image-source-packaged" value="packaged">
-                        <span class="source-label">内置图片库</span>
+                        <input type="radio" name="image-source" id="setting-image-source-folder" value="folder">
+                        <span class="source-label">本地文件夹</span>
                     </label>
-                </div>
-                <div id="packaged-tip" class="tip-box" hidden>
-                    <div class="tip-title">💡 图片清单为空？</div>
-                    <div class="tip-text">请双击运行脚本生成：</div>
-                    <div class="tip-path">generate-image-list.bat</div>
-                    <div class="tip-text">位置：扩展根目录 + 选择本地图片</div>
+
                 </div>
                 <div id="imported-section">
                     <div class="settings-row">
@@ -49,9 +44,35 @@
                         <button id="clear-imported" class="settings-danger">清空</button>
                         <button id="file-import-btn" class="file-import-btn">+ 选择本地图片</button>
                         <input type="file" id="import-input" accept="image/*" multiple hidden>
+                            <button id="folder-import-btn" class="file-import-btn">📁 选择本地文件夹并导入</button>
+                            <input type="file" id="folder-import-input" webkitdirectory multiple hidden>
+
                     </div>
+                    <div class="settings-row">
+                        <button id="open-imported-preview" class="file-import-btn">🖼 查看已导入图片</button>
+                    </div>
+
+                        <div id="imported-selection-bar" class="imported-selection-bar" hidden>
+                            <label class="selection-all-label">
+                                <input type="checkbox" id="select-all-imported"> 全选
+                            </label>
+                            <button id="delete-selected-imported" class="settings-danger" disabled>删除选中 (<span id="selected-count">0</span>)</button>
+                        </div>
+
                     <div id="preview-grid" class="preview-grid"></div>
                 </div>
+                <div id="folder-section" hidden>
+                    <div class="settings-row">
+                        <span class="settings-label">文件夹：<span id="folder-name">未选择</span></span>
+                        <button id="folder-select-btn" class="file-import-btn">📁 选择本地文件夹</button>
+                        <button id="folder-clear-btn" class="settings-danger">清除</button>
+                        <button id="folder-view-btn" class="file-import-btn">🖼 查看文件夹图片</button>
+                    </div>
+                    <div id="folder-tip" class="tip-box" hidden>
+                        <div class="tip-text">选择本地文件夹后，将直接读取该文件夹中的图片进行轮播，不会复制到扩展存储。</div>
+                    </div>
+                </div>
+
             </div>
 
             <div class="settings-section">
@@ -147,7 +168,6 @@
                     <div class="settings-row settings-row-compact">
                         <span class="settings-label">随机顺序</span>
                         <input type="checkbox" id="setting-carousel-shuffle">
-                        <span class="settings-value">关</span>
                     </div>
                     <div class="settings-row">
                         <span class="settings-label">动画时长（ms）</span>
@@ -157,12 +177,10 @@
                     <div class="settings-row settings-row-compact">
                         <span class="settings-label">暂停轮播</span>
                         <input type="checkbox" id="setting-carousel-paused">
-                        <span class="settings-value">关</span>
                     </div>
                     <div class="settings-row settings-row-compact">
                         <span class="settings-label">页面隐藏时暂停</span>
                         <input type="checkbox" id="setting-pause-when-hidden" checked>
-                        <span class="settings-value">开</span>
                     </div>
                 </div>
             </div>
@@ -173,6 +191,17 @@
             </div>
         </div>
     </div>
+
+    <div id="preview-modal" class="preview-modal" hidden>
+        <div class="preview-modal-backdrop" id="preview-modal-backdrop"></div>
+        <div class="preview-modal-panel" id="preview-modal-panel">
+            <div class="preview-modal-header">
+                <span id="preview-modal-title">已导入图片</span>
+                <button id="preview-modal-close" class="settings-close">✕</button>
+            </div>
+        </div>
+    </div>
+
 
     <script src="script.js"></script>
 </body>

@@ -33,16 +33,6 @@ function escapeCssUrl(url) {
   return `url("${String(url).replace(/"/g, '\\"')}")`;
 }
 
-function getPackagedImageUrl(imgName) {
-  if (imgName.includes('%20')) return `images/${imgName.replace(/%20/g, '%2520')}`;
-  if (imgName.includes(' ')) return `images/${imgName.replace(/ /g, '%20')}`;
-  return `images/${imgName}`;
-}
-
-function getCorrectPackagedCssBackground(imgName) {
-  return escapeCssUrl(getPackagedImageUrl(imgName));
-}
-
 const storage = {
   async get() {
     try {
@@ -73,7 +63,7 @@ const storage = {
 
 function normalizeSettings(settings) {
   const s = { ...DEFAULT_SETTINGS, ...(settings || {}) };
-  s.imageSource = s.imageSource === 'packaged' ? 'packaged' : 'imported';
+  s.imageSource = ['imported', 'folder'].includes(s.imageSource) ? s.imageSource : 'imported';
   s.searchTopPercent = clampNumber(Number(s.searchTopPercent), 0, 100);
   s.searchWidthPx = clampNumber(Number(s.searchWidthPx), 280, 900);
   s.searchHeightPx = clampNumber(Number(s.searchHeightPx), 18, 60);
@@ -116,13 +106,17 @@ function applyCssVars(settings) {
 
 function openDb() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('myedgenewtab', 1);
+    const request = indexedDB.open('myedgenewtab', 2);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains('images')) {
         const store = db.createObjectStore('images', { keyPath: 'id' });
         store.createIndex('addedAt', 'addedAt', { unique: false });
       }
+        if (!db.objectStoreNames.contains('folderSource')) {
+          db.createObjectStore('folderSource', { keyPath: 'id' });
+        }
+
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -141,13 +135,29 @@ async function withStore(mode, fn) {
   });
 }
 
+async function withObjectStore(storeName, mode, fn) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, mode);
+    const store = tx.objectStore(storeName);
+    const resultPromise = Promise.resolve().then(() => fn(store));
+    tx.oncomplete = () => resolve(resultPromise);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+
 function genId() {
   if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 async function addImportedImages(files) {
-  const fileList = Array.from(files || []).filter(f => f && typeof f.type === 'string' && f.type.startsWith('image/'));
+  const fileList = Array.from(files || []).filter(f => f && (
+      (typeof f.type === 'string' && f.type.startsWith('image/')) ||
+      (typeof f.name === 'string' && /\.(png|jpe?g|webp|gif|bmp|svg|avif)$/i.test(f.name))
+    ));
   if (fileList.length === 0) return { added: 0, failed: 0 };
   const now = Date.now();
   await withStore('readwrite', store => {
@@ -155,7 +165,7 @@ async function addImportedImages(files) {
       let completed = 0;
       let hasError = false;
       for (const file of fileList) {
-        const record = { id: genId(), name: file.name || 'image', type: file.type || 'image/*', size: Number(file.size) || 0, addedAt: now, blob: file };
+        const record = { id: genId(), name: file.name || 'image', type: file.type || (() => { const ext = (file.name || '').split('.').pop().toLowerCase(); return ({ png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif', bmp: 'image/bmp', svg: 'image/svg+xml', avif: 'image/avif' })[ext] || 'image/png'; })(), size: Number(file.size) || 0, addedAt: now, blob: file };
         const req = store.put(record);
         req.onsuccess = () => { completed++; if (completed === fileList.length && !hasError) resolve(); };
         req.onerror = () => { hasError = true; reject(req.error); };
@@ -195,13 +205,68 @@ async function clearImportedImages() {
   await withStore('readwrite', store => store.clear());
 }
 
-async function loadPackagedImageList() {
-  const response = await fetch('image-list.json');
-  if (!response.ok) throw new Error('未找到图片清单文件');
-  const list = await response.json();
-  if (!Array.isArray(list)) return [];
-  return list.filter(x => typeof x === 'string' && x.length > 0);
+async function saveFolderSource(handle, name) {
+  await withObjectStore('folderSource', 'readwrite', store => store.put({ id: 'default', handle, name, updatedAt: Date.now() }));
 }
+
+async function getFolderSource() {
+  const row = await withObjectStore('folderSource', 'readonly', store => {
+    return new Promise((resolve, reject) => {
+      const req = store.get('default');
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  });
+  return row || null;
+}
+
+async function clearFolderSource() {
+  await withObjectStore('folderSource', 'readwrite', store => store.delete('default'));
+}
+
+async function ensureFolderPermission(handle) {
+  if (!handle) return false;
+  try {
+    if (handle.queryPermission) {
+      const state = await handle.queryPermission({ mode: 'read' });
+      if (state === 'granted') return true;
+    }
+    if (handle.requestPermission) {
+      const state = await handle.requestPermission({ mode: 'read' });
+      return state === 'granted';
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function listFolderImages(handle) {
+  if (!handle) return [];
+  const allowed = await ensureFolderPermission(handle);
+  if (!allowed) return [];
+  const results = [];
+  async function walk(dirHandle, prefix) {
+    let entries = [];
+    try {
+      for await (const entry of dirHandle.values()) entries.push(entry);
+    } catch (e) {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.kind === 'file') {
+        if (/\.(png|jpe?g|webp|gif|bmp|svg|avif)$/i.test(entry.name)) {
+          results.push({ name: prefix ? `${prefix}/${entry.name}` : entry.name, handle: entry });
+        }
+      } else if (entry.kind === 'directory') {
+        await walk(entry, prefix ? `${prefix}/${entry.name}` : entry.name);
+      }
+    }
+  }
+  await walk(handle, '');
+  return results.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+}
+
 
 class ObjectUrlCache {
   constructor(maxSize) { this.maxSize = maxSize; this.map = new Map(); }
@@ -289,12 +354,16 @@ class CarouselController {
     if (nextNextItem) { const nextNextUrl = await this.getPreloadUrl(nextNextItem); this.preload(nextNextUrl); }
   }
   async getCssBackground(item) {
-    if (item?.type === 'packaged') return getCorrectPackagedCssBackground(item.name);
+    // packaged removed
     if (item?.type === 'imported') { const url = await this.getImportedUrl(item.id); return url ? escapeCssUrl(url) : null; }
+      if (item?.type === 'folder') { const url = await this.getFolderUrl(item); return url ? escapeCssUrl(url) : null; }
+
     return null;
   }
   async getPreloadUrl(item) {
-    if (item?.type === 'packaged') return getPackagedImageUrl(item.name);
+    // packaged removed
+      if (item?.type === 'folder') return this.getFolderUrl(item);
+
     if (item?.type === 'imported') return this.getImportedUrl(item.id);
     return null;
   }
@@ -307,6 +376,19 @@ class CarouselController {
     this.urlCache.set(id, url);
     return url;
   }
+    async getFolderUrl(item) {
+      const cached = this.urlCache.get(item.id);
+      if (cached) return cached;
+      try {
+        const file = await item.handle.getFile();
+        const url = URL.createObjectURL(file);
+        this.urlCache.set(item.id, url);
+        return url;
+      } catch (e) {
+        return null;
+      }
+    }
+
   preload(url) {
     if (!url) return Promise.resolve(false);
     return new Promise(resolve => {
@@ -365,19 +447,51 @@ function setupSettingsUi(controllers) {
 
   const el = id => document.getElementById(id);
   const sourceImported = el('setting-image-source-imported');
-  const sourcePackaged = el('setting-image-source-packaged');
-  const packagedTip = el('packaged-tip');
+  // 内置图片库已移除
+  // 内置图片库已移除
   const importedSection = el('imported-section');
   const fileImportBtn = el('file-import-btn');
   const importInput = el('import-input');
   const clearImported = el('clear-imported');
   const importedCount = el('imported-count');
   const previewGrid = el('preview-grid');
+    const folderImportBtn = el('folder-import-btn');
+    const folderImportInput = el('folder-import-input');
+    const selectionBar = el('imported-selection-bar');
+    const selectAllImported = el('select-all-imported');
+    const deleteSelectedImported = el('delete-selected-imported');
+    const selectedCount = el('selected-count');
+    const selectedIds = new Set();
+    const sourceFolder = el('setting-image-source-folder');
+    const folderSection = el('folder-section');
+    const folderName = el('folder-name');
+    const folderSelectBtn = el('folder-select-btn');
+    const folderClearBtn = el('folder-clear-btn');
+    const folderViewBtn = el('folder-view-btn');
+    const folderTip = el('folder-tip');
+
+    const openImportedPreview = el('open-imported-preview');
+    const previewModal = el('preview-modal');
+    const previewModalPanel = el('preview-modal-panel');
+    const previewModalClose = el('preview-modal-close');
+    const previewModalBackdrop = el('preview-modal-backdrop');
+    const previewModalTitle = el('preview-modal-title');
+    const PREVIEW_PAGE_SIZE = 40;
+    let previewModalOpen = false;
+    let previewLoadedCount = 0;
+    const previewObjectUrls = new Set();
+
+
+
   const checkShuffle = el('setting-carousel-shuffle');
   const checkPaused = el('setting-carousel-paused');
   const checkPauseWhenHidden = el('setting-pause-when-hidden');
 
   let currentSettings = controllers.settings;
+    // 把导入图片的预览和选择栏移动到中间浮窗中，设置面板默认不再被大量缩略图撑高
+    if (previewModalPanel && selectionBar) previewModalPanel.appendChild(selectionBar);
+    if (previewModalPanel && previewGrid) previewModalPanel.appendChild(previewGrid);
+
 
   async function save(patch) {
     currentSettings = normalizeSettings({ ...currentSettings, ...patch });
@@ -392,72 +506,169 @@ function setupSettingsUi(controllers) {
     valueEl.textContent = fmt(value);
   }
 
-  async function renderPreviewGrid() {
-    previewGrid.innerHTML = '';
-    let items = [];
-    if (currentSettings.imageSource === 'imported') {
-      const importedList = await listImportedImages();
-      items = importedList.map(x => ({ id: x.id, name: x.name, type: 'imported' }));
-    } else {
-      try { const packagedList = await loadPackagedImageList(); items = packagedList.map(name => ({ name, type: 'packaged' })); } catch (_) { items = []; }
-    }
-    if (items.length === 0) {
-      const emptyDiv = document.createElement('div');
-      emptyDiv.className = 'preview-empty';
-      emptyDiv.textContent = currentSettings.imageSource === 'imported' ? '暂无图片' : '请先运行脚本生成清单';
-      previewGrid.appendChild(emptyDiv);
-      return;
-    }
-    for (const item of items) {
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'preview-item';
-      try {
-        let url = null;
-        if (item.type === 'packaged') {
-          const imagePath = getPackagedImageUrl(item.name);
-          const response = await fetch(imagePath);
-          if (response.ok) { const blob = await response.blob(); url = URL.createObjectURL(blob); }
-        } else {
-          const blob = await getImportedBlob(item.id);
-          if (blob) url = URL.createObjectURL(blob);
-        }
-        if (url) itemDiv.style.backgroundImage = `url("${url}")`;
-      } catch (e) { console.error('Failed to load preview image:', e); }
-      if (item.type === 'imported') {
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'preview-item-delete'; deleteBtn.type = 'button'; deleteBtn.textContent = '×'; deleteBtn.title = '删除';
-        deleteBtn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await deleteImportedImage(item.id);
-          await renderPreviewGrid();
-          await controllers.refreshImages();
-          const newCount = await listImportedImages();
-          importedCount.textContent = String(newCount.length);
-        });
-        itemDiv.appendChild(deleteBtn);
+    function updateSelectionUi() {
+      const checkboxes = previewGrid.querySelectorAll('.preview-item-checkbox');
+      const total = checkboxes.length;
+      const selectedTotal = selectedIds.size;
+      if (selectAllImported) {
+        selectAllImported.checked = total > 0 && selectedTotal === total;
+        selectAllImported.indeterminate = selectedTotal > 0 && selectedTotal < total;
       }
-      previewGrid.appendChild(itemDiv);
+      if (deleteSelectedImported) {
+        deleteSelectedImported.disabled = selectedTotal === 0;
+        if (selectedCount) selectedCount.textContent = String(selectedTotal);
+      }
+      if (selectionBar) {
+        selectionBar.hidden = !previewModalOpen || currentSettings.imageSource !== 'imported' || total === 0;
+      }
     }
-  }
+
+
+
+    async function renderPreviewGrid() {
+      if (!previewModalOpen) {
+          for (const url of previewObjectUrls) URL.revokeObjectURL(url);
+          previewObjectUrls.clear();
+
+        previewGrid.innerHTML = '';
+        updateSelectionUi();
+        return;
+      }
+        for (const url of previewObjectUrls) URL.revokeObjectURL(url);
+        previewObjectUrls.clear();
+
+      previewGrid.innerHTML = '';
+      let items = [];
+      if (currentSettings.imageSource === 'imported') {
+        const importedList = await listImportedImages();
+        items = importedList.map(x => ({ id: x.id, name: x.name, type: 'imported' }));
+        if (previewModalTitle) previewModalTitle.textContent = '已导入图片';
+      } else if (currentSettings.imageSource === 'folder') {
+        const folder = await getFolderSource();
+        if (folder?.handle) {
+          const files = await listFolderImages(folder.handle);
+          items = files.map((f, i) => ({ type: 'folder', id: `folder-${i}-${f.name}`, name: f.name, handle: f.handle }));
+        }
+        if (previewModalTitle) previewModalTitle.textContent = folder?.name ? `文件夹图片：${folder.name}` : '文件夹图片';
+      }
+        if (!previewModalOpen) {
+          for (const url of previewObjectUrls) URL.revokeObjectURL(url);
+          previewObjectUrls.clear();
+          previewGrid.innerHTML = '';
+          updateSelectionUi();
+          return;
+        }
+
+
+      const validImportedIds = new Set(items.filter(x => x.type === 'imported').map(x => x.id));
+      for (const id of Array.from(selectedIds)) {
+        if (!validImportedIds.has(id)) selectedIds.delete(id);
+      }
+
+      if (previewLoadedCount <= 0) previewLoadedCount = PREVIEW_PAGE_SIZE;
+
+      if (items.length === 0) {
+        selectedIds.clear();
+        updateSelectionUi();
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'preview-empty';
+        emptyDiv.textContent = currentSettings.imageSource === 'folder' ? '该文件夹中没有找到图片' : '暂无导入图片';
+        previewGrid.appendChild(emptyDiv);
+        return;
+      }
+
+      const visibleItems = items.slice(0, previewLoadedCount);
+      for (const item of visibleItems) {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'preview-item';
+        try {
+          let url = null;
+          if (item.type === 'folder') {
+            const file = await item.handle.getFile();
+            if (file) url = URL.createObjectURL(file);
+              if (url) previewObjectUrls.add(url);
+
+          } else {
+            const blob = await getImportedBlob(item.id);
+            if (blob) url = URL.createObjectURL(blob);
+              if (url) previewObjectUrls.add(url);
+
+          }
+          if (url) itemDiv.style.backgroundImage = `url("${url}")`;
+        } catch (e) { console.error('Failed to load preview image:', e); }
+        if (item.type === 'imported') {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'preview-item-checkbox';
+          checkbox.dataset.id = item.id;
+          checkbox.checked = selectedIds.has(item.id);
+          checkbox.title = '选择';
+          checkbox.addEventListener('change', () => {
+            if (checkbox.checked) selectedIds.add(item.id);
+            else selectedIds.delete(item.id);
+            itemDiv.classList.toggle('selected', checkbox.checked);
+            updateSelectionUi();
+          });
+          if (checkbox.checked) itemDiv.classList.add('selected');
+          itemDiv.appendChild(checkbox);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'preview-item-delete'; deleteBtn.type = 'button'; deleteBtn.textContent = '×'; deleteBtn.title = '删除';
+          deleteBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            selectedIds.delete(item.id);
+            await deleteImportedImage(item.id);
+            await renderPreviewGrid();
+            await controllers.refreshImages();
+            const newCount = await listImportedImages();
+            importedCount.textContent = String(newCount.length);
+          });
+          itemDiv.appendChild(deleteBtn);
+        }
+        previewGrid.appendChild(itemDiv);
+      }
+
+      if (items.length > previewLoadedCount) {
+        const moreBtn = document.createElement('button');
+        moreBtn.type = 'button';
+        moreBtn.className = 'load-more-btn';
+        moreBtn.textContent = `加载更多（还剩 ${items.length - previewLoadedCount} 张）`;
+        moreBtn.addEventListener('click', () => {
+          previewLoadedCount += PREVIEW_PAGE_SIZE;
+          renderPreviewGrid();
+        });
+        previewGrid.appendChild(moreBtn);
+      }
+      updateSelectionUi();
+    }
+
 
   async function handleSourceChange(source) {
     currentSettings = normalizeSettings({ ...currentSettings, imageSource: source });
     sourceImported.checked = source === 'imported';
-    sourcePackaged.checked = source === 'packaged';
-    packagedTip.hidden = source !== 'packaged';
+    // 内置图片库已移除
+    sourceFolder.checked = source === 'folder';
+    // 内置图片库已移除
+    folderSection.hidden = source !== 'folder';
     importedSection.hidden = source !== 'imported';
+      previewLoadedCount = 0;
+
     await save({ imageSource: source });
     await renderPreviewGrid();
     await controllers.refreshImages();
   }
   sourceImported.addEventListener('change', () => handleSourceChange('imported'));
-  sourcePackaged.addEventListener('change', () => handleSourceChange('packaged'));
+    sourceFolder.addEventListener('change', () => handleSourceChange('folder'));
+
+  // 内置图片库已移除
 
   fileImportBtn.addEventListener('click', () => importInput.click());
   importInput.addEventListener('change', async () => {
     const files = importInput.files;
     if (files && files.length) {
       await addImportedImages(files);
+        selectedIds.clear();
+
       importInput.value = '';
       await renderPreviewGrid();
       await controllers.refreshImages();
@@ -466,6 +677,8 @@ function setupSettingsUi(controllers) {
   });
   clearImported.addEventListener('click', async () => {
     if (confirm('确定要清空所有导入的图片吗？')) {
+        selectedIds.clear();
+
       await clearImportedImages();
       controllers.carousel.urlCache.clear();
       await renderPreviewGrid();
@@ -473,6 +686,125 @@ function setupSettingsUi(controllers) {
       importedCount.textContent = '0';
     }
   });
+
+    folderImportBtn.addEventListener('click', () => folderImportInput.click());
+    folderImportInput.addEventListener('change', async () => {
+      const files = folderImportInput.files;
+      if (files && files.length) {
+        const imageFiles = Array.from(files).filter(f => f && (
+            (typeof f.type === 'string' && f.type.startsWith('image/')) ||
+            (typeof f.name === 'string' && /\.(png|jpe?g|webp|gif|bmp|svg|avif)$/i.test(f.name))
+          ));
+        if (imageFiles.length === 0) {
+          alert('所选文件夹中没有找到图片');
+        } else {
+          await addImportedImages(imageFiles);
+          selectedIds.clear();
+          folderImportInput.value = '';
+          await renderPreviewGrid();
+          await controllers.refreshImages();
+          importedCount.textContent = String((await listImportedImages()).length);
+        }
+      }
+      folderImportInput.value = '';
+
+    });
+
+    function openPreviewModal() {
+      previewModalOpen = true;
+      previewModal.hidden = false;
+      previewLoadedCount = 0;
+      renderPreviewGrid();
+    }
+
+    function closePreviewModal() {
+      previewModalOpen = false;
+      previewModal.hidden = true;
+        for (const url of previewObjectUrls) URL.revokeObjectURL(url);
+        previewObjectUrls.clear();
+
+      previewGrid.innerHTML = '';
+      updateSelectionUi();
+    }
+
+    openImportedPreview.addEventListener('click', () => {
+      if (previewModalTitle) previewModalTitle.textContent = '已导入图片';
+      openPreviewModal();
+    });
+    previewModalClose.addEventListener('click', closePreviewModal);
+    previewModalBackdrop.addEventListener('click', closePreviewModal);
+    document.addEventListener('keydown', e => {
+      if (!previewModal.hidden && e.key === 'Escape') closePreviewModal();
+    });
+
+    folderSelectBtn.addEventListener('click', async () => {
+      if (!window.showDirectoryPicker) {
+        alert('当前浏览器不支持直接选择本地文件夹，请使用“导入我的图片”中的文件夹导入。');
+        return;
+      }
+      try {
+        const handle = await window.showDirectoryPicker();
+        const permission = await ensureFolderPermission(handle);
+        if (!permission) {
+          alert('无法读取该文件夹');
+          return;
+        }
+        await saveFolderSource(handle, handle.name || '未命名文件夹');
+        if (folderName) folderName.textContent = handle.name || '未命名文件夹';
+        if (folderTip) folderTip.hidden = false;
+        if (currentSettings.imageSource !== 'folder') {
+          await handleSourceChange('folder');
+        } else {
+          await controllers.refreshImages();
+          if (previewModalOpen) renderPreviewGrid();
+        }
+      } catch (e) {
+        if (e && e.name !== 'AbortError') console.error(e);
+      }
+    });
+
+    folderClearBtn.addEventListener('click', async () => {
+      if (!confirm('确定要清除本地文件夹图源吗？')) return;
+      await clearFolderSource();
+      if (folderName) folderName.textContent = '未选择';
+      if (folderTip) folderTip.hidden = true;
+      await controllers.refreshImages();
+      if (previewModalOpen) renderPreviewGrid();
+    });
+
+    folderViewBtn.addEventListener('click', () => {
+      if (previewModalTitle) previewModalTitle.textContent = '文件夹图片';
+      openPreviewModal();
+    });
+
+
+    selectAllImported.addEventListener('change', () => {
+      const checkboxes = previewGrid.querySelectorAll('.preview-item-checkbox');
+      checkboxes.forEach(cb => {
+        cb.checked = selectAllImported.checked;
+        const id = cb.dataset.id;
+        if (id) {
+          if (cb.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+        }
+        const itemDiv = cb.closest('.preview-item');
+        if (itemDiv) itemDiv.classList.toggle('selected', cb.checked);
+      });
+      updateSelectionUi();
+    });
+
+    deleteSelectedImported.addEventListener('click', async () => {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) return;
+      if (!confirm(`确定要删除选中的 ${ids.length} 张图片吗？`)) return;
+      await Promise.all(ids.map(id => deleteImportedImage(id)));
+      selectedIds.clear();
+      controllers.carousel.urlCache.clear();
+      await renderPreviewGrid();
+      await controllers.refreshImages();
+      importedCount.textContent = String((await listImportedImages()).length);
+    });
+
 
   const rangeIds = [
     ['setting-search-top', 'setting-search-top-value', 'searchTopPercent', v => `${v}%`],
@@ -542,6 +874,8 @@ function setupSettingsUi(controllers) {
   const resetBtn = el('reset-settings-btn');
   resetBtn.addEventListener('click', async () => {
     if (confirm('确定要恢复所有设置为默认值吗？')) {
+        selectedIds.clear();
+
       await save(DEFAULT_SETTINGS);
       syncUi(currentSettings);
       await renderPreviewGrid();
@@ -551,8 +885,10 @@ function setupSettingsUi(controllers) {
 
   function syncUi(settings) {
     sourceImported.checked = settings.imageSource === 'imported';
-    sourcePackaged.checked = settings.imageSource === 'packaged';
-    packagedTip.hidden = settings.imageSource !== 'packaged';
+    // 内置图片库已移除
+      sourceFolder.checked = settings.imageSource === 'folder';
+    // 内置图片库已移除
+      folderSection.hidden = settings.imageSource !== 'folder';
     importedSection.hidden = settings.imageSource !== 'imported';
     for (const [rangeId, valueId, key, fmt] of rangeIds) {
       const rangeEl = el(rangeId);
@@ -575,6 +911,11 @@ function setupSettingsUi(controllers) {
     checkPauseWhenHidden.checked = settings.pauseWhenHidden;
   }
   syncUi(currentSettings);
+    getFolderSource().then(folder => {
+      if (folderName) folderName.textContent = folder?.name || '未选择';
+      if (folderTip) folderTip.hidden = !folder;
+    }).catch(() => {});
+
 
   listImportedImages().then(items => {
     importedCount.textContent = String(items.length);
@@ -593,10 +934,21 @@ async function loadSettings() {
 async function buildImageItems(settings) {
   const imported = await listImportedImages();
   const importedItems = imported.map(x => ({ type: 'imported', id: x.id, name: x.name }));
-  let packagedItems = [];
-  try { const list = await loadPackagedImageList(); packagedItems = list.map(name => ({ type: 'packaged', name })); } catch (_) { packagedItems = []; }
-  const preferred = settings.imageSource === 'imported' ? importedItems : packagedItems;
-  const fallback = settings.imageSource === 'imported' ? packagedItems : importedItems;
+  // 内置图片库已移除
+    let packagedItems = [];
+
+  // 内置图片库已移除
+  let folderItems = [];
+  if (settings.imageSource === 'folder') {
+    const folder = await getFolderSource();
+    if (folder?.handle) {
+      const files = await listFolderImages(folder.handle);
+      folderItems = files.map((f, i) => ({ type: 'folder', id: `folder-${i}-${f.name}`, name: f.name, handle: f.handle }));
+    }
+  }
+
+  const preferred = settings.imageSource === 'folder' ? folderItems : importedItems;
+  const fallback = importedItems;
   return preferred.length ? preferred : fallback;
 }
 
