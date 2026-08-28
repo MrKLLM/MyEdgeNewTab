@@ -811,9 +811,28 @@ body, html {
   accent-color: var(--c-primary);
   cursor: pointer;
 }
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 #delete-selected-imported {
   padding: 5px 10px;
   font-size: 11px;
+}
+#export-selected-imported {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+#export-selected-imported:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+#export-selected-imported:disabled:hover {
+  background: rgba(143, 201, 255, 0.18);
+  color: var(--c-primary);
 }
 #delete-selected-imported:disabled {
   opacity: 0.45;

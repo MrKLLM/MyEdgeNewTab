@@ -205,6 +205,78 @@ async function clearImportedImages() {
   await withStore('readwrite', store => store.clear());
 }
 
+// 导出已导入图片到用户指定的本地文件夹
+function sanitizeFilename(name) {
+  let s = String(name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
+  // 去除控制字符
+  s = s.replace(/[\u0000-\u001f\u007f]/g, '');
+  if (!s) s = 'image';
+  if (s.length > 200) s = s.slice(0, 200);
+  return s;
+}
+
+// 若目标文件夹已存在同名文件，自动追加 _2、_3 等后缀避免覆盖
+async function ensureUniqueName(dirHandle, baseName) {
+  async function exists(n) {
+    try { await dirHandle.getFileHandle(n); return true; } catch (e) { return false; }
+  }
+  if (!(await exists(baseName))) return baseName;
+  const dotIdx = baseName.lastIndexOf('.');
+  const hasExt = dotIdx > 0 && dotIdx < baseName.length - 1;
+  const stem = hasExt ? baseName.slice(0, dotIdx) : baseName;
+  const ext = hasExt ? baseName.slice(dotIdx) : '';
+  let n = 2;
+  while (await exists(`${stem}_${n}${ext}`)) n++;
+  return `${stem}_${n}${ext}`;
+}
+
+async function exportImagesToFolder(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) return;
+  if (!window.showDirectoryPicker) {
+    alert('当前浏览器不支持选择导出文件夹（需要 File System Access API）。请使用较新版本的 Edge 或 Chrome 浏览器。');
+    return;
+  }
+  let dirHandle;
+  try {
+    dirHandle = await window.showDirectoryPicker();
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // 用户取消
+    alert('未能选择导出文件夹');
+    return;
+  }
+  try {
+    const perm = await dirHandle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { alert('未获得该文件夹的写入权限，已取消导出。'); return; }
+  } catch (e) {
+    alert('无法获取文件夹写入权限，已取消导出。');
+    return;
+  }
+
+  const metaList = await listImportedImages();
+  const nameMap = new Map(metaList.map(m => [m.id, m.name]));
+
+  let ok = 0, fail = 0;
+  for (const id of ids) {
+    try {
+      const blob = await getImportedBlob(id);
+      if (!blob) { fail++; continue; }
+      const rawName = nameMap.get(id) || `image_${id}`;
+      const fileName = await ensureUniqueName(dirHandle, sanitizeFilename(rawName) || `image_${id}`);
+      const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      ok++;
+    } catch (e) {
+      console.error('导出图片失败：', e);
+      fail++;
+    }
+  }
+  let msg = `导出完成：成功 ${ok} 张`;
+  if (fail) msg += `，失败 ${fail} 张`;
+  alert(msg);
+}
+
 async function saveFolderSource(handle, name) {
   await withObjectStore('folderSource', 'readwrite', store => store.put({ id: 'default', handle, name, updatedAt: Date.now() }));
 }
@@ -461,6 +533,9 @@ function setupSettingsUi(controllers) {
     const selectAllImported = el('select-all-imported');
     const deleteSelectedImported = el('delete-selected-imported');
     const selectedCount = el('selected-count');
+    const exportSelectedImported = el('export-selected-imported');
+    const exportSelectedCount = el('export-selected-count');
+    const exportAllImported = el('export-all-imported');
     const selectedIds = new Set();
     const sourceFolder = el('setting-image-source-folder');
     const folderSection = el('folder-section');
@@ -517,6 +592,10 @@ function setupSettingsUi(controllers) {
       if (deleteSelectedImported) {
         deleteSelectedImported.disabled = selectedTotal === 0;
         if (selectedCount) selectedCount.textContent = String(selectedTotal);
+      }
+      if (exportSelectedImported) {
+        exportSelectedImported.disabled = selectedTotal === 0;
+        if (exportSelectedCount) exportSelectedCount.textContent = String(selectedTotal);
       }
       if (selectionBar) {
         selectionBar.hidden = !previewModalOpen || currentSettings.imageSource !== 'imported' || total === 0;
@@ -804,6 +883,22 @@ function setupSettingsUi(controllers) {
       await controllers.refreshImages();
       importedCount.textContent = String((await listImportedImages()).length);
     });
+
+    if (exportAllImported) {
+      exportAllImported.addEventListener('click', async () => {
+        const list = await listImportedImages();
+        if (list.length === 0) { alert('暂无已导入图片，无法导出。'); return; }
+        await exportImagesToFolder(list.map(x => x.id));
+      });
+    }
+
+    if (exportSelectedImported) {
+      exportSelectedImported.addEventListener('click', async () => {
+        const ids = Array.from(selectedIds);
+        if (ids.length === 0) return;
+        await exportImagesToFolder(ids);
+      });
+    }
 
 
   const rangeIds = [

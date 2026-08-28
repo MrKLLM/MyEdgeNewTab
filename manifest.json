@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "自定义新标签页",
-  "version": "1.3.0",
-  "description": "带有背景轮播和搜索功能的自定义新标签页。v1.3.0：本地文件夹图源、图片浮窗预览、多选删除、性能优化。",
+  "version": "1.4.0",
+  "description": "带有背景轮播和搜索功能的自定义新标签页。v1.4.0：新增已导入图片导出到本地文件夹功能（支持导出全部或导出选中）。",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },

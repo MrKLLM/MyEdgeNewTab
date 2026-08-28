@@ -50,13 +50,17 @@
                     </div>
                     <div class="settings-row">
                         <button id="open-imported-preview" class="file-import-btn">🖼 查看已导入图片</button>
+                        <button id="export-all-imported" class="file-import-btn">⬇ 导出全部图片</button>
                     </div>
 
                         <div id="imported-selection-bar" class="imported-selection-bar" hidden>
                             <label class="selection-all-label">
                                 <input type="checkbox" id="select-all-imported"> 全选
                             </label>
-                            <button id="delete-selected-imported" class="settings-danger" disabled>删除选中 (<span id="selected-count">0</span>)</button>
+                            <div class="selection-actions">
+                                <button id="export-selected-imported" class="file-import-btn" disabled>⬇ 导出选中 (<span id="export-selected-count">0</span>)</button>
+                                <button id="delete-selected-imported" class="settings-danger" disabled>删除选中 (<span id="selected-count">0</span>)</button>
+                            </div>
                         </div>
 
                     <div id="preview-grid" class="preview-grid"></div>
