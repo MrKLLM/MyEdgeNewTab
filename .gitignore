@@ -27,6 +27,7 @@ yarn-debug.log*
 .trae/
 .codebuddy/
 .workbuddy/
+.mimocode/
 .continue/
 .copilot/
 *.chatlog

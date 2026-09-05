@@ -148,7 +148,12 @@ body, html {
   color: rgba(0, 0, 0, 0.45); /* 占位符颜色略淡，不干扰主体文字颜色设置 */
 }
 #search-button {
-  margin-top: var(--button-margin-top);
+  /* 修复：按钮改为相对容器绝对定位，容器高度只由输入框决定，
+     使“间距”仅影响按钮位置，搜索框本身不再随间距改变而移动 */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(100% + var(--button-margin-top));
   padding: var(--btn-padding-v) var(--btn-padding-h);
   background-color: var(--btn-color);
   color: white;

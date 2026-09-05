@@ -6,7 +6,9 @@ A customizable Microsoft Edge new tab page with background carousel & Bing searc
 
 ## KEY DIFFERENCES BETWEEN VERSIONS
 
-- **v1.3.0 (Current)**: Added a third "Local Folder" image source that reads images directly without importing; imported-image thumbnails are now collapsed in settings and shown in a centered floating preview window; multi-select delete for imported images; paged/performance-optimized preview loading; removed the built-in image library feature.
+- **v1.4.1 (Current)**: Fixed the "Search Box & Button Spacing (px)" setting — previously adjusting the spacing also moved the search box itself because the search container was vertically centered; it now changes only the gap between the search box and the button, leaving the search box position untouched. Current parameters locked in as defaults.
+- **v1.4.0 (Legacy)**: Added exporting imported images to a local folder (export all or export selected).
+- **v1.3.0 (Legacy)**: Added a third "Local Folder" image source that reads images directly without importing; imported-image thumbnails are now collapsed in settings and shown in a centered floating preview window; multi-select delete for imported images; paged/performance-optimized preview loading; removed the built-in image library feature.
 
 - **v1.2.3 (Legacy)**: Major polish of the settings panel — unified design tokens, refreshed visual hierarchy, spring-feel animations on buttons & sliders, and bug fixes for the section chevron rotation and the "Restore Defaults" slider sync.
 
