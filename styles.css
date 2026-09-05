@@ -1,18 +1,18 @@
 /* ===================== 全局基础样式 ===================== */
 :root {
-  --search-top: 25%;
-  --search-width: 550px;
-  --search-height: 23px;
-  --search-radius: 24px;
-  --search-opacity: 0.9; /* 默认改为 0~1 的小数 */
-  --search-text-color: #202124; /* 新增：搜索框文字颜色 */
-  --button-margin-top: 23px;
+  --search-top: 37%;
+  --search-width: 510px;
+  --search-height: 37px;
+  --search-radius: 40px;
+  --search-opacity: 0.2; /* 默认改为 0~1 的小数 */
+  --search-text-color: #7b41e6; /* 新增：搜索框文字颜色 */
+  --button-margin-top: 16px;
   --carousel-transition-ms: 1000ms;
   --btn-font-size: 14px;
-  --btn-radius: 4px;
-  --btn-padding-v: 4px;
+  --btn-radius: 30px;
+  --btn-padding-v: 9px;
   --btn-padding-h: 14px;
-  --btn-color: #4285f4;
+  --btn-color: #009dff;
 
   /* ============== 设置面板设计系统 token ============== */
   /* 间距节奏（4/8dp） */
@@ -148,22 +148,76 @@ body, html {
   color: rgba(0, 0, 0, 0.45); /* 占位符颜色略淡，不干扰主体文字颜色设置 */
 }
 #search-button {
-  /* 修复：按钮改为相对容器绝对定位，容器高度只由输入框决定，
-     使“间距”仅影响按钮位置，搜索框本身不再随间距改变而移动 */
+  /* 玻璃拟态：按钮位于搜索框右侧并垂直居中，“间距”为按钮与搜索框之间的水平间距 */
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: calc(100% + var(--button-margin-top));
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(100% + var(--button-margin-top));
+  white-space: nowrap;
   padding: var(--btn-padding-v) var(--btn-padding-h);
-  background-color: var(--btn-color);
-  color: white;
-  border: none;
+  background-color: color-mix(in srgb, var(--btn-color) 32%, rgba(255, 255, 255, 0.28));
+  background-image: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.45) 50%, transparent 60%);
+  background-size: 250% 100%;
+  background-position: 130% 0;
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: var(--btn-radius);
   cursor: pointer;
   font-size: var(--btn-font-size);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-position 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+#search-button::before,
+#search-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--btn-radius);
+  pointer-events: none;
+  opacity: 0;
+}
+/* 内圈涟漪：快速散开 */
+#search-button::after {
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  transform: scale(0.9);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+}
+/* 外圈涟漪：慢速散得更远 */
+#search-button::before {
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  transform: scale(0.85);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.04s, opacity 0.6s ease 0.04s;
 }
 #search-button:hover {
-  filter: brightness(0.88);
+  transform: translateY(-50%) scale(1.07);
+  background-position: -35% 0;
+  background-color: color-mix(in srgb, var(--btn-color) 48%, rgba(255, 255, 255, 0.3));
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 10px 34px color-mix(in srgb, var(--btn-color) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+#search-button:hover::before,
+#search-button:hover::after {
+  opacity: 1;
+}
+#search-button:hover::after {
+  transform: scale(1.32);
+}
+#search-button:hover::before {
+  transform: scale(1.6);
+}
+#search-button:active {
+  transform: translateY(-50%) scale(0.94);
+  transition-duration: 0.12s;
 }
 
 /* ===================== 设置面板样式 ===================== */
